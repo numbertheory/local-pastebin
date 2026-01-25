@@ -1,80 +1,21 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Paste {{ paste.id }} - Local Pastebin</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-      body { background-color: #f8f9fa; }
-      .container { max_width: 800px; margin-top: 50px; }
-      pre { 
-        background-color: #ffffff; 
-        padding: 15px; 
-        border: 1px solid #dee2e6; 
-        border-radius: 5px; 
-        white-space: pre-wrap; 
-        word-wrap: break-word;
-        max-height: 70vh;
-        overflow-y: auto;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <div class="card shadow-sm">
-        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-          <div>
-            <h5 class="mb-0 d-inline-block me-2">Paste: {{ paste.id }}</h5>
-            <small class="text-white-50">{{ paste.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</small>
-          </div>
-          <div>
-            <a href="/raw/{{ paste.id }}" class="btn btn-outline-light btn-sm me-1" target="_blank">Raw</a>
-            <button class="btn btn-outline-danger btn-sm me-1" onclick="deletePaste()">Delete</button>
-            <a href="/" class="btn btn-outline-light btn-sm">New</a>
-          </div>
+{% extends "base.html" %}
+
+{% block title %}Paste {{ paste.id }} - Local Pastebin{% endblock %}
+
+{% block content %}
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <div>
+            <h2 style="margin: 0;">Paste {{ paste.id }}</h2>
+            <span class="meta">Created: {{ paste.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
         </div>
-        <div class="card-body">
-            <div class="mb-3 d-flex justify-content-end">
-                <button class="btn btn-outline-secondary btn-sm" onclick="copyToClipboard()">Copy to Clipboard</button>
-            </div>
-            <pre id="pasteContent">{{ paste.content }}</pre>
+        <div>
+            <a href="{{ url_for('view_raw', paste_id=paste.id) }}" class="button" style="margin-right: 10px;">Raw</a>
+            <form action="{{ url_for('delete_paste', paste_id=paste.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this paste?');">
+                <button type="submit" style="background: #dc3545; margin-right: 10px;">Delete</button>
+            </form>
+            <a href="{{ url_for('index') }}">New Paste</a>
         </div>
-      </div>
     </div>
 
-    <script>
-      function copyToClipboard() {
-        const text = document.getElementById('pasteContent').innerText;
-        navigator.clipboard.writeText(text).then(() => {
-          const btn = document.querySelector('button[onclick="copyToClipboard()"]');
-          const originalText = btn.innerText;
-          btn.innerText = 'Copied!';
-          btn.classList.remove('btn-outline-secondary');
-          btn.classList.add('btn-success');
-          setTimeout(() => {
-            btn.innerText = originalText;
-            btn.classList.remove('btn-success');
-            btn.classList.add('btn-outline-secondary');
-          }, 2000);
-        }).catch(err => {
-          console.error('Failed to copy: ', err);
-        });
-      }
-
-      function deletePaste() {
-        if (confirm('Are you sure you want to delete this paste?')) {
-          fetch('/api/paste/{{ paste.id }}', {
-            method: 'DELETE'
-          }).then(response => {
-            if (response.ok) {
-              window.location.href = '/';
-            } else {
-              alert('Failed to delete paste');
-            }
-          });
-        }
-      }
-    </script>
-  </body>
-</html>
+    <pre><code>{{ paste.content }}</code></pre>
+{% endblock %}

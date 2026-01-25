@@ -2,6 +2,7 @@ import os
 import random
 import string
 import datetime
+from zoneinfo import ZoneInfo 
 from flask import Flask, request, jsonify, render_template, redirect, url_for, abort
 from flask_sqlalchemy import SQLAlchemy
 
@@ -36,6 +37,10 @@ def generate_id(length=6):
         if not Paste.query.get(new_id):
             return new_id
 
+def set_to_timezone(naive_ts, tz="America/Los_Angeles"):
+    utc_dt = naive_ts.replace(tzinfo=datetime.timezone.utc)
+    return utc_dt.astimezone(ZoneInfo(tz))
+
 # Initialize DB
 with app.app_context():
     db.create_all()
@@ -45,7 +50,10 @@ with app.app_context():
 def index():
     page = request.args.get('page', 1, type=int)
     pagination = Paste.query.order_by(Paste.created_at.desc()).paginate(page=page, per_page=app.config['PASTES_PER_PAGE'], error_out=False)
-    recent_pastes = pagination.items
+    recent_pastes = [
+        {"id": x.id, "content": x.content, 
+        "created_at": set_to_timezone(x.created_at)} for x in pagination.items]
+
 
     if request.method == 'POST':
         content = request.form.get('content')
@@ -60,6 +68,13 @@ def index():
         return redirect(url_for('view_paste', paste_id=paste_id))
     
     return render_template('index.html', recent_pastes=recent_pastes, pagination=pagination)
+
+@app.route('/delete/<paste_id>', methods=['POST'])
+def delete_paste(paste_id):
+    paste = Paste.query.get_or_404(paste_id)
+    db.session.delete(paste)
+    db.session.commit()
+    return redirect(url_for('index'))
 
 @app.route('/<paste_id>')
 def view_paste(paste_id):

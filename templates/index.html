@@ -1,85 +1,49 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Local Pastebin</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-      body { background-color: #f8f9fa; }
-      .container { max_width: 800px; margin-top: 50px; }
-      textarea { font-family: monospace; min-height: 400px; }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <div class="card shadow-sm">
-        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-          <h4 class="mb-0">Local Pastebin</h4>
-          <a href="/" class="btn btn-outline-light btn-sm">New Paste</a>
-        </div>
-        <div class="card-body">
-          {% if error %}
-          <div class="alert alert-danger">{{ error }}</div>
-          {% endif %}
-          <form method="POST" action="/">
-            <div class="mb-3">
-              <textarea class="form-control" name="content" placeholder="Paste your content here..." required></textarea>
-            </div>
-            <div class="d-flex justify-content-end">
-              <button type="submit" class="btn btn-primary">Create Paste</button>
-            </div>
-          </form>
-        </div>
-      </div>
-      
-      {% if recent_pastes %}
-      <div class="card shadow-sm mt-4">
-        <div class="card-header bg-light">
-          <h5 class="mb-0">Recent Pastes</h5>
-        </div>
-        <div class="card-body p-0">
-          <table class="table table-hover mb-0">
-            <thead>
-              <tr>
-                <th class="ps-3">ID</th>
-                <th>Created At</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for paste in recent_pastes %}
-              <tr>
-                <td class="ps-3"><a href="/{{ paste.id }}" class="text-decoration-none fw-bold">{{ paste.id }}</a></td>
-                <td class="text-muted">{{ paste.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</td>
-                <td><button class="btn btn-outline-danger btn-sm" onclick="deletePaste('{{ paste.id }}')">Delete</button></td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-      {% endif %}
+{% extends "base.html" %}
 
-      <div class="text-center mt-3 text-muted">
-        <small>Hosted locally on port 3636</small>
-      </div>
-    </div>
+{% block content %}
+    <section>
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+        
+        <form method="POST" action="{{ url_for('index') }}">
+            <div style="margin-bottom: 1rem;">
+                <textarea name="content" placeholder="Paste your content here..." required></textarea>
+            </div>
+            <button type="submit">Create Paste</button>
+        </form>
+    </section>
 
-    <script>
-      function deletePaste(pasteId) {
-        if (confirm('Are you sure you want to delete this paste?')) {
-          fetch('/api/paste/' + pasteId, {
-            method: 'DELETE'
-          }).then(response => {
-            if (response.ok) {
-              window.location.reload();
-            } else {
-              alert('Failed to delete paste');
-            }
-          });
-        }
-      }
-    </script>
-  </body>
-</html>
+    <section style="margin-top: 3rem;">
+        <h2>Recent Pastes</h2>
+        {% if recent_pastes %}
+            <ul style="list-style: none; padding: 0;">
+                {% for paste in recent_pastes %}
+                    <li style="border-bottom: 1px solid #eee; padding: 10px 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <strong><a href="{{ url_for('view_paste', paste_id=paste.id) }}">{{ paste.id }}</a></strong>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span class="meta">{{ paste.created_at.strftime('%Y-%m-%d %I:%M %p %Z') }}</span>
+                                <form action="{{ url_for('delete_paste', paste_id=paste.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete this paste?');">
+                                    <button type="submit" style="padding: 5px 10px; font-size: 0.8rem; background: #dc3545;">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <div class="pagination">
+                {% if pagination.has_prev %}
+                    <a href="{{ url_for('index', page=pagination.prev_num) }}">&larr; Newer</a>
+                {% endif %}
+                {% if pagination.has_prev and pagination.has_next %} &nbsp;|&nbsp; {% endif %}
+                {% if pagination.has_next %}
+                    <a href="{{ url_for('index', page=pagination.next_num) }}">Older &rarr;</a>
+                {% endif %}
+            </div>
+        {% else %}
+            <p class="meta">No pastes found.</p>
+        {% endif %}
+    </section>
+{% endblock %}
