@@ -12,6 +12,7 @@ data_dir = '/data' if os.path.exists('/data') else base_dir
 db_path = os.path.join(data_dir, 'pastes.db')
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['PASTES_PER_PAGE'] = 10
 
 db = SQLAlchemy(app)
 
@@ -42,12 +43,14 @@ with app.app_context():
 # Routes
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    recent_pastes = Paste.query.order_by(Paste.created_at.desc()).limit(10).all()
+    page = request.args.get('page', 1, type=int)
+    pagination = Paste.query.order_by(Paste.created_at.desc()).paginate(page=page, per_page=app.config['PASTES_PER_PAGE'], error_out=False)
+    recent_pastes = pagination.items
 
     if request.method == 'POST':
         content = request.form.get('content')
         if not content:
-            return render_template('index.html', error="Content cannot be empty", recent_pastes=recent_pastes)
+            return render_template('index.html', error="Content cannot be empty", recent_pastes=recent_pastes, pagination=pagination)
         
         paste_id = generate_id()
         new_paste = Paste(id=paste_id, content=content)
@@ -56,7 +59,7 @@ def index():
         
         return redirect(url_for('view_paste', paste_id=paste_id))
     
-    return render_template('index.html', recent_pastes=recent_pastes)
+    return render_template('index.html', recent_pastes=recent_pastes, pagination=pagination)
 
 @app.route('/<paste_id>')
 def view_paste(paste_id):
