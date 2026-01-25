@@ -28,7 +28,7 @@ docker volume rm local-pastebin_pastebin-data
 - **Web UI:** Open [http://localhost:3636](http://localhost:3636)
 - **API Example:**
   ```bash
-  curl -X POST -d "My paste content" http://localhost:3636/api/paste
+  curl -X POST -H "Content-Type: text/plain" -d "My paste content" http://localhost:3636/api/paste
   ```
 
 ## Development

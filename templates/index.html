@@ -44,6 +44,7 @@
               <tr>
                 <th class="ps-3">ID</th>
                 <th>Created At</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -51,6 +52,7 @@
               <tr>
                 <td class="ps-3"><a href="/{{ paste.id }}" class="text-decoration-none fw-bold">{{ paste.id }}</a></td>
                 <td class="text-muted">{{ paste.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</td>
+                <td><button class="btn btn-outline-danger btn-sm" onclick="deletePaste('{{ paste.id }}')">Delete</button></td>
               </tr>
               {% endfor %}
             </tbody>
@@ -63,5 +65,21 @@
         <small>Hosted locally on port 3636</small>
       </div>
     </div>
+
+    <script>
+      function deletePaste(pasteId) {
+        if (confirm('Are you sure you want to delete this paste?')) {
+          fetch('/api/paste/' + pasteId, {
+            method: 'DELETE'
+          }).then(response => {
+            if (response.ok) {
+              window.location.reload();
+            } else {
+              alert('Failed to delete paste');
+            }
+          });
+        }
+      }
+    </script>
   </body>
 </html>
