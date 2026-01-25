@@ -42,10 +42,12 @@ with app.app_context():
 # Routes
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    recent_pastes = Paste.query.order_by(Paste.created_at.desc()).limit(10).all()
+
     if request.method == 'POST':
         content = request.form.get('content')
         if not content:
-            return render_template('index.html', error="Content cannot be empty")
+            return render_template('index.html', error="Content cannot be empty", recent_pastes=recent_pastes)
         
         paste_id = generate_id()
         new_paste = Paste(id=paste_id, content=content)
@@ -54,7 +56,7 @@ def index():
         
         return redirect(url_for('view_paste', paste_id=paste_id))
     
-    return render_template('index.html')
+    return render_template('index.html', recent_pastes=recent_pastes)
 
 @app.route('/<paste_id>')
 def view_paste(paste_id):

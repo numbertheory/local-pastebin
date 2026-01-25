@@ -32,6 +32,33 @@
           </form>
         </div>
       </div>
+      
+      {% if recent_pastes %}
+      <div class="card shadow-sm mt-4">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">Recent Pastes</h5>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th class="ps-3">ID</th>
+                <th>Created At</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for paste in recent_pastes %}
+              <tr>
+                <td class="ps-3"><a href="/{{ paste.id }}" class="text-decoration-none fw-bold">{{ paste.id }}</a></td>
+                <td class="text-muted">{{ paste.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
       <div class="text-center mt-3 text-muted">
         <small>Hosted locally on port 3636</small>
       </div>
