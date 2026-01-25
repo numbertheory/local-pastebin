@@ -1,6 +1,6 @@
 # Local Pastebin
 
-A lightweight, local network Pastebin alternative using Flask and SQLite, designed to run in Docker.
+A lightweight, local network Pastebin alternative using Flask and SQLite, designed to run in Docker. This is still a work in progress and not meant for deployment on the open internet. Ideally works for a local area network.
 
 ## Features
 - **Web Interface:** Create and view pastes with a simple UI.
@@ -9,22 +9,20 @@ A lightweight, local network Pastebin alternative using Flask and SQLite, design
 
 ## Usage
 
-### 1. Build the Docker Image
-```bash
-docker build -t local-pastebin .
-```
 
-### 2. Run the Container
+### 1. Run the compose file
 Run the container, mapping port 3636 and mounting a volume for persistent storage.
 
 ```bash
-docker run -d \
-  -p 3636:3636 \
-  -v $(pwd)/data:/data \
-  --name my-pastebin \
-  local-pastebin
+docker compose up -d
 ```
-*Note: The application stores the database at `/data/pastes.db` if the `/data` directory exists.*
+*Note: The application stores the database in a docker volume called local-pastebin_pastebin-data*
+
+To clear the database:
+
+```bash
+docker volume rm local-pastebin_pastebin-data
+```
 
 ### 3. Access
 - **Web UI:** Open [http://localhost:3636](http://localhost:3636)
@@ -34,7 +32,8 @@ docker run -d \
   ```
 
 ## Development
-To run locally without Docker:
-1. Install dependencies: `pip install -r requirements.txt`
-2. Run app: `python app.py`
+To run locally without Docker, use [Python Poetry](https://python-poetry.org/docs/#installation):
+
+1. Install dependencies: `poetry install`
+2. Run app: `poetry run python app.py`
 
