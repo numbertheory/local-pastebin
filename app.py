@@ -37,7 +37,7 @@ def generate_id(length=6):
         if not Paste.query.get(new_id):
             return new_id
 
-def set_to_timezone(naive_ts, tz="America/Los_Angeles"):
+def set_to_timezone(naive_ts, tz=os.getenv('PASTEBIN_TIMEZONE', "America/Los_Angeles")):
     utc_dt = naive_ts.replace(tzinfo=datetime.timezone.utc)
     return utc_dt.astimezone(ZoneInfo(tz))
 
@@ -79,7 +79,9 @@ def delete_paste(paste_id):
 @app.route('/<paste_id>')
 def view_paste(paste_id):
     paste = Paste.query.get_or_404(paste_id)
-    return render_template('view.html', paste=paste)
+    dict_paste = Paste.query.get_or_404(paste_id).to_dict()
+    dict_paste["created_at"] = set_to_timezone(paste.created_at)
+    return render_template('view.html', paste=dict_paste)
 
 @app.route('/raw/<paste_id>')
 def view_raw(paste_id):

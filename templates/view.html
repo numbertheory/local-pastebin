@@ -6,7 +6,7 @@
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
         <div>
             <h2 style="margin: 0;">Paste {{ paste.id }}</h2>
-            <span class="meta">Created: {{ paste.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+            <span class="meta">Created: {{ paste.created_at.strftime('%Y-%m-%d %I:%M %p %Z') }}</span>
         </div>
         <div>
             <a href="{{ url_for('view_raw', paste_id=paste.id) }}" class="button" style="margin-right: 10px;">Raw</a>

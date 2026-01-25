@@ -3,6 +3,8 @@ services:
     build: .
     ports:
       - "3636:3636"
+    environment:
+      - PASTEBIN_TIMEZONE=America/Los_Angeles
     volumes:
       - pastebin-data:/data
     restart: unless-stopped
