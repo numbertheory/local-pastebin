@@ -11,7 +11,7 @@ A lightweight, local network Pastebin alternative using Flask and SQLite, design
 
 
 ### 1. Run the compose file
-Run the container, mapping port 3636 and mounting a volume for persistent storage.
+Run the container, mapping port 3636 and mounting a volume for persistent storage. The options for the PASTEBIN_TIMEZONE environmental variable can be found [on this wikipedia page](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones), with the default timezone set to "America/Los_Angeles".
 
 ```bash
 docker compose up -d
