@@ -1,0 +1,12 @@
+services:
+  pastebin:
+    build: .
+    ports:
+      - "3636:3636"
+    volumes:
+      - pastebin-data:/data
+    restart: unless-stopped
+    image: local-pastebin
+
+volumes:
+  pastebin-data:
