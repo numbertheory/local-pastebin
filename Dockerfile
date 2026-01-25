@@ -2,10 +2,8 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
 COPY . .
+RUN poetry install
 
 # Create a directory for persistent data if used with a volume
 RUN mkdir -p /data
