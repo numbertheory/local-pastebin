@@ -1,7 +1,10 @@
 FROM python:3.11-slim
 
 WORKDIR /app
-
+RUN apt update && \
+    apt install -y pipx && \
+    pipx install poetry && \
+    ln -s /root/.local/bin/poetry /usr/local/bin/poetry
 COPY . .
 RUN poetry install
 
@@ -11,4 +14,4 @@ VOLUME /data
 
 EXPOSE 3636
 
-CMD ["python", "app.py"]
+CMD ["poetry", "run", "python", "app.py"]
