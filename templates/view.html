@@ -3,21 +3,36 @@
 {% block title %}Paste {{ paste.id }} - Local Pastebin{% endblock %}
 
 {% block content %}
+
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
         <div>
             <h2 style="margin: 0;">Paste {{ paste.id }}</h2>
             <span class="meta">Created: {{ paste.created_at.strftime('%Y-%m-%d %I:%M %p %Z') }}</span>
         </div>
-        <div>
-            <a href="{{ url_for('view_raw', paste_id=paste.id) }}" class="button" style="margin-right: 10px;">Raw</a>
+        <div style="display: flex; align-items: center; gap: 0px;">
+            <button 
+                onclick="window.open('{{ url_for('view_raw', paste_id=paste.id) }}', '_blank')"
+                style="background: #FFFFFF;">
+                    <img width="20px" src="{{ url_for('static', filename='img/raw.png') }}" alt="Raw File">
+                </button>
             <form action="{{ url_for('delete_paste', paste_id=paste.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this paste?');">
-                <button type="submit" style="background: #FFFFFF;margin-right: 10px;">
+                <button type="submit" style="background: #FFFFFF;">
                     <img width="20px" src="{{ url_for('static', filename='img/trash.png') }}" alt="Delete">
                 </button>
             </form>
-            <a href="{{ url_for('index') }}">New Paste</a>
+            <button 
+                id="goBtn"
+                style="background: #FFFFFF;">
+                    <img width="25px" src="{{ url_for('static', filename='img/new-paste.png') }}" alt="New Paste">
+            </button>
         </div>
     </div>
+    <script>
+  document.getElementById('goBtn').addEventListener('click', function () {
+    // Navigate in the same tab
+    location.href = '{{ url_for('index') }}';
+  });
+</script>
 
     <pre><code>{{ paste.content }}</code></pre>
 {% endblock %}
