@@ -16,5 +16,5 @@ git pull
 docker compose down
 
 # Bring up new instance
-docker compose up --force-recreate --build
+docker compose up -d --force-recreate --build
 
