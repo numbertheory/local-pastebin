@@ -15,6 +15,11 @@
                 style="background: #FFFFFF;">
                     <img width="20px" src="{{ url_for('static', filename='img/raw.png') }}" alt="Raw File">
                 </button>
+            {% if paste.version == history[0].version %}
+            <button id="toggleEditBtn" style="background: #FFFFFF;" title="Edit">
+                <img width="20px" src="{{ url_for('static', filename='img/edit-thicker.png') }}" alt="Edit">
+            </button>
+            {% endif %}
             <form action="{{ url_for('delete_paste', paste_id=paste.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this paste?');">
                 <button type="submit" style="background: #FFFFFF;">
                     <img width="20px" src="{{ url_for('static', filename='img/trash.png') }}" alt="Delete">
@@ -32,7 +37,39 @@
     // Navigate in the same tab
     location.href = '{{ url_for('index') }}';
   });
+
+  const toggleEditBtn = document.getElementById('toggleEditBtn');
+  if (toggleEditBtn) {
+      toggleEditBtn.addEventListener('click', function() {
+          const editSection = document.getElementById('editSection');
+          editSection.style.display = editSection.style.display === 'none' ? 'block' : 'none';
+      });
+  }
 </script>
 
-    <pre><code>{{ paste.content }}</code></pre>
+    <pre><code>{{ paste.content[0] }}</code></pre>
+{% if paste.version == history[0].version %}
+<div id="editSection" class="edit-section" style="display: none; margin-top: 1rem;">
+    <h3>Edit Paste</h3>
+    <form action="{{ url_for('modify_paste', paste_id=paste.id) }}" method="POST">
+        <textarea name="content" rows="10" style="width: 100%;">{{ paste.content[0] }}</textarea>
+        <br>
+        <button type="submit">Save New Version</button>
+    </form>
+</div>
+{% endif %}
+<div class="history-section">
+    <h3>History</h3>
+    <ul>
+        {% for entry in history %}
+        <li>
+            <a href="{{ url_for('view_paste', paste_id=paste.id, version=entry.version) }}">
+                Version {{ entry.version }}
+            </a>
+            - {{ entry.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+            {% if entry.version == paste.version %} (Current View) {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</div>
 {% endblock %}

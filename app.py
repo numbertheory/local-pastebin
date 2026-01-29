@@ -20,13 +20,15 @@ db = SQLAlchemy(app)
 # Model
 class Paste(db.Model):
     id = db.Column(db.String(8), primary_key=True)
+    version = db.Column(db.Integer, primary_key=True, default=1)
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
     def to_dict(self):
         return {
             'id': self.id,
-            'content': self.content,
+            'version': self.version,
+            'content': [self.content],
             'created_at': self.created_at.isoformat()
         }
 
@@ -34,7 +36,7 @@ def generate_id(length=6):
     characters = string.ascii_letters + string.digits
     while True:
         new_id = ''.join(random.choice(characters) for _ in range(length))
-        if not Paste.query.get(new_id):
+        if not Paste.query.filter_by(id=new_id).first():
             return new_id
 
 def set_to_timezone(naive_ts, tz=os.getenv('PASTEBIN_TIMEZONE', "America/Los_Angeles")):
@@ -69,23 +71,51 @@ def index():
     
     return render_template('index.html', recent_pastes=recent_pastes, pagination=pagination)
 
+@app.route('/modify/<paste_id>', methods=['POST'])
+def modify_paste(paste_id):
+    # Get the latest version to increment
+    latest_paste = Paste.query.filter_by(id=paste_id).order_by(Paste.version.desc()).first_or_404()
+    content = request.form.get('content')
+    if content:
+        new_version = latest_paste.version + 1
+        new_paste = Paste(id=paste_id, version=new_version, content=content)
+        db.session.add(new_paste)
+        db.session.commit()
+    return redirect(url_for('view_paste', paste_id=paste_id))
+
 @app.route('/delete/<paste_id>', methods=['POST'])
 def delete_paste(paste_id):
-    paste = Paste.query.get_or_404(paste_id)
-    db.session.delete(paste)
+    pastes = Paste.query.filter_by(id=paste_id).all()
+    if not pastes:
+        abort(404)
+    for paste in pastes:
+        db.session.delete(paste)
     db.session.commit()
     return redirect(url_for('index'))
 
 @app.route('/<paste_id>')
 def view_paste(paste_id):
-    paste = Paste.query.get_or_404(paste_id)
-    dict_paste = Paste.query.get_or_404(paste_id).to_dict()
+    version = request.args.get('version', type=int)
+    pastes = Paste.query.filter_by(id=paste_id).order_by(Paste.version.desc()).all()
+    if not pastes:
+        abort(404)
+
+    if version:
+        paste = next((p for p in pastes if p.version == version), None)
+        if not paste:
+            abort(404)
+    else:
+        paste = pastes[0]
+
+    dict_paste = paste.to_dict()
     dict_paste["created_at"] = set_to_timezone(paste.created_at)
-    return render_template('view.html', paste=dict_paste)
+    
+    history = [{'version': p.version, 'created_at': set_to_timezone(p.created_at)} for p in pastes]
+    return render_template('view.html', paste=dict_paste, history=history)
 
 @app.route('/raw/<paste_id>')
 def view_raw(paste_id):
-    paste = Paste.query.get_or_404(paste_id)
+    paste = Paste.query.filter_by(id=paste_id).order_by(Paste.version.desc()).first_or_404()
     return paste.content, 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
 # API Routes
@@ -122,11 +152,14 @@ def api_create_paste():
 @app.route('/api/paste/<paste_id>', methods=['GET', 'DELETE'])
 def api_get_paste(paste_id):
     if request.method == "GET":
-        paste = Paste.query.get_or_404(paste_id)
+        paste = Paste.query.filter_by(id=paste_id).order_by(Paste.version.desc()).first_or_404()
         return jsonify(paste.to_dict())
     if request.method == "DELETE":
-        paste = Paste.query.get_or_404(paste_id)
-        db.session.delete(paste)
+        pastes = Paste.query.filter_by(id=paste_id).all()
+        if not pastes:
+            abort(404)
+        for paste in pastes:
+            db.session.delete(paste)
         db.session.commit()
         return '', 204
 

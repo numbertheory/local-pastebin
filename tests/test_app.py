@@ -39,7 +39,7 @@ class PastebinTestCase(unittest.TestCase):
         # Verify persistence
         paste_id = data['id']
         with app.app_context():
-            paste = Paste.query.get(paste_id)
+            paste = Paste.query.filter_by(id=paste_id).first()
             self.assertIsNotNone(paste)
             self.assertEqual(paste.content, 'API JSON Paste')
 
@@ -57,6 +57,20 @@ class PastebinTestCase(unittest.TestCase):
         self.assertEqual(get_response.status_code, 200)
         get_data = json.loads(get_response.data)
         self.assertEqual(get_data['content'], 'Raw Text Paste')
+
+    def test_modify_paste(self):
+        # First, create a paste
+        with app.app_context():
+            p = Paste(id='testedit', content='Original Content')
+            db.session.add(p)
+            db.session.commit()
+
+        # Now, modify it
+        response = self.app.post('/modify/testedit', data=dict(content="Updated Content"), follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Updated Content', response.data)
+        self.assertNotIn(b'Original Content', response.data)
+
 
 if __name__ == '__main__':
     unittest.main()
