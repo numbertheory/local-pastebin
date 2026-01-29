@@ -51,12 +51,21 @@ with app.app_context():
 @app.route('/', methods=['GET', 'POST'])
 def index():
     page = request.args.get('page', 1, type=int)
-    pagination = Paste.query.order_by(Paste.created_at.desc()).paginate(page=page, per_page=app.config['PASTES_PER_PAGE'], error_out=False)
+    
+    # Subquery to find the latest version for each paste
+    subquery = db.session.query(Paste.id, db.func.max(Paste.version).label('max_version')).group_by(Paste.id).subquery()
+    
+    # Join to get only the latest versions
+    pagination = Paste.query.join(subquery, (Paste.id == subquery.c.id) & (Paste.version == subquery.c.max_version)).order_by(Paste.created_at.desc()).paginate(page=page, per_page=app.config['PASTES_PER_PAGE'], error_out=False)
+
     recent_pastes = [
-        {"id": x.id, "content": x.content, 
+        {"id": x.id, "content": x.content, "version": x.version,
         "created_at": set_to_timezone(x.created_at)} for x in pagination.items]
-
-
+    for i in range(0, len(recent_pastes)):
+        pastes = Paste.query.filter_by(id=recent_pastes[i]["id"]).order_by(Paste.version.desc()).all()
+        history = [{'version': p.version, 'created_at': set_to_timezone(p.created_at)} for p in pastes]
+        recent_pastes[i]["max_versions"] = len(history)
+    
     if request.method == 'POST':
         content = request.form.get('content')
         if not content:
@@ -68,7 +77,8 @@ def index():
         db.session.commit()
         
         return redirect(url_for('view_paste', paste_id=paste_id))
-    
+    print(recent_pastes)
+    print(len(recent_pastes))
     return render_template('index.html', recent_pastes=recent_pastes, pagination=pagination)
 
 @app.route('/modify/<paste_id>', methods=['POST'])

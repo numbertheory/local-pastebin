@@ -19,6 +19,7 @@
         {% if recent_pastes %}
             <ul style="list-style: none; padding: 0;">
                 {% for paste in recent_pastes %}
+                {% if paste.version == paste.max_versions %}
                     <li style="border-bottom: 1px solid #eee; padding: 10px 0;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <strong><a href="{{ url_for('view_paste', paste_id=paste.id) }}">{{ paste.id }}</a></strong>
@@ -32,6 +33,7 @@
                             </div>
                         </div>
                     </li>
+                {% endif %}
                 {% endfor %}
             </ul>
 
