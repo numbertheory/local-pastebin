@@ -77,8 +77,6 @@ def index():
         db.session.commit()
         
         return redirect(url_for('view_paste', paste_id=paste_id))
-    print(recent_pastes)
-    print(len(recent_pastes))
     return render_template('index.html', recent_pastes=recent_pastes, pagination=pagination)
 
 @app.route('/modify/<paste_id>', methods=['POST'])

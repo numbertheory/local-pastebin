@@ -10,6 +10,9 @@
             <span class="meta">Created: {{ paste.created_at.strftime('%Y-%m-%d %I:%M %p %Z') }}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 0px;">
+            <label style="display: flex; align-items: center; gap: 5px; margin-right: 15px; cursor: pointer; font-size: 0.9rem;">
+                <input type="checkbox" id="toggleLineNumbers"> Show Line Numbers
+            </label>
             <button 
                 onclick="window.open('{{ url_for('view_raw', paste_id=paste.id) }}', '_blank')"
                 style="background: #FFFFFF;">
@@ -32,22 +35,13 @@
             </button>
         </div>
     </div>
-    <script>
-  document.getElementById('goBtn').addEventListener('click', function () {
-    // Navigate in the same tab
-    location.href = '{{ url_for('index') }}';
-  });
 
-  const toggleEditBtn = document.getElementById('toggleEditBtn');
-  if (toggleEditBtn) {
-      toggleEditBtn.addEventListener('click', function() {
-          const editSection = document.getElementById('editSection');
-          editSection.style.display = editSection.style.display === 'none' ? 'block' : 'none';
-      });
-  }
-</script>
-
-    <pre><code>{{ paste.content[0] }}</code></pre>
+    <div class="code hide-linenos" id="pasteCode">
+        {% for line in paste.content[0].split('\n') %}
+        <div class="lineno"></div>
+        <div class="line">{{ line }}</div>
+        {% endfor %}
+    </div>
 {% if paste.version == history[0].version %}
 <div id="editSection" class="edit-section" style="display: none; margin-top: 1rem;">
     <h3>Edit Paste</h3>
@@ -72,4 +66,27 @@
         {% endfor %}
     </ul>
 </div>
+<script>
+  document.getElementById('goBtn').addEventListener('click', function () {
+    // Navigate in the same tab
+    location.href = '{{ url_for('index') }}';
+  });
+
+  const toggleEditBtn = document.getElementById('toggleEditBtn');
+  if (toggleEditBtn) {
+      toggleEditBtn.addEventListener('click', function() {
+          const editSection = document.getElementById('editSection');
+          editSection.style.display = editSection.style.display === 'none' ? 'block' : 'none';
+      });
+  }
+
+  const toggleLineNumbers = document.getElementById('toggleLineNumbers');
+  const pasteCode = document.getElementById('pasteCode');
+  if (toggleLineNumbers && pasteCode) {
+      toggleLineNumbers.addEventListener('change', function() {
+          // If checked, remove the hiding class. If unchecked, add it.
+          pasteCode.classList.toggle('hide-linenos', !this.checked);
+      });
+  }
+</script>
 {% endblock %}
