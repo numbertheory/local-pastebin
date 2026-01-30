@@ -18,12 +18,20 @@
         <h2>Recent Pastes</h2>
         {% if recent_pastes %}
             <ul style="list-style: none; padding: 0;">
+                <div id="indexHeadersLink" style="font-family: Jura; font-size: smaller;">
+                    Link
+                 <div id="indexHeadersInfo">
+                    <span style="margin-right: 120px; font-size: smaller;">Versions</span>
+                    <span style="margin-right: 50px; font-size: smaller;">Last Updated</span>
+                </div>
+                </div>
                 {% for paste in recent_pastes %}
                 {% if paste.version == paste.max_versions %}
                     <li style="border-bottom: 1px solid #eee; padding: 10px 0;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <strong><a href="{{ url_for('view_paste', paste_id=paste.id) }}">{{ paste.id }}</a></strong>
                             <div style="display: flex; align-items: center; gap: 10px;">
+                                <span class="meta" style="margin-right: 20px">{{ paste.max_versions }}</span>
                                 <span class="meta">{{ paste.created_at.strftime('%Y-%m-%d %I:%M %p %Z') }}</span>
                                 <form action="{{ url_for('delete_paste', paste_id=paste.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete this paste?');">
                                     <button type="submit" style="padding: 5px 10px; font-size: 0.8rem; background: #ffffff;">

@@ -35,13 +35,28 @@
             </button>
         </div>
     </div>
-
-    <div class="code hide-linenos" id="pasteCode">
-        {% for line in paste.content[0].split('\n') %}
+{% set ns = namespace(in_code=False) %}
+{% for line in paste.content[0].split('\n') %}
+    {% if line.startswith('```') %}
+        {% if ns.in_code %}
+            </div>
+            {% set ns.in_code = False %}
+        {% else %}
+            <div class="code hide-linenos">
+            {% set ns.in_code = True %}
+        {% endif %}
+    {% elif ns.in_code %}
         <div class="lineno"></div>
         <div class="line">{{ line }}</div>
-        {% endfor %}
-    </div>
+    {% else %}
+        {% if not line.strip() %}
+        <br>
+        {% else %}
+        {{ line }}
+        {% endif %}
+    {% endif %}
+{% endfor %}
+{% if ns.in_code %}</div>{% endif %}
 {% if paste.version == history[0].version %}
 <div id="editSection" class="edit-section" style="display: none; margin-top: 1rem;">
     <h3>Edit Paste</h3>
@@ -81,11 +96,11 @@
   }
 
   const toggleLineNumbers = document.getElementById('toggleLineNumbers');
-  const pasteCode = document.getElementById('pasteCode');
-  if (toggleLineNumbers && pasteCode) {
+  if (toggleLineNumbers) {
       toggleLineNumbers.addEventListener('change', function() {
-          // If checked, remove the hiding class. If unchecked, add it.
-          pasteCode.classList.toggle('hide-linenos', !this.checked);
+          document.querySelectorAll('.code').forEach(el => {
+              el.classList.toggle('hide-linenos', !this.checked);
+          });
       });
   }
 </script>
