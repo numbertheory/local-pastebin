@@ -1,25 +1,12 @@
 import os
-import random
-import string
-import datetime
-from zoneinfo import ZoneInfo 
-from flask import Flask, request, jsonify, render_template, redirect, url_for, abort
-from flask_sqlalchemy import SQLAlchemy
-import re
-from jinja2 import Environment, FileSystemLoader
 
-def is_url(value: str) -> bool:
-    """
-    Returns True if *value* looks like a URL.
-    """
-    # The same pattern we used in the template, but compiled once here.
-    pattern = re.compile(
-        r'^(https?://)?'          # optional scheme
-        r'([\w.-]+)\.'            # sub‑domain / domain
-        r'[a-z]{2,}'              # TLD (at least two letters)
-        r'(/[\\w./?%&=-]*)?$'     # optional path / query
-    )
-    return bool(pattern.match(value))
+from flask import Flask, request, jsonify, render_template, redirect, url_for, abort
+from jinja2 import Environment, FileSystemLoader
+from backend.models import db, Paste
+from backend.api import remove_paste
+from utils.utilities import generate_id, is_url, set_to_timezone
+
+
 
 app = Flask(__name__)
 app.jinja_env.tests['url'] = is_url
@@ -32,33 +19,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['PASTES_PER_PAGE'] = 10
 
-db = SQLAlchemy(app)
-
-# Model
-class Paste(db.Model):
-    id = db.Column(db.String(8), primary_key=True)
-    version = db.Column(db.Integer, primary_key=True, default=1)
-    content = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'version': self.version,
-            'content': [self.content],
-            'created_at': self.created_at.isoformat()
-        }
-
-def generate_id(length=6):
-    characters = string.ascii_letters + string.digits
-    while True:
-        new_id = ''.join(random.choice(characters) for _ in range(length))
-        if not Paste.query.filter_by(id=new_id).first():
-            return new_id
-
-def set_to_timezone(naive_ts, tz=os.getenv('PASTEBIN_TIMEZONE', "America/Los_Angeles")):
-    utc_dt = naive_ts.replace(tzinfo=datetime.timezone.utc)
-    return utc_dt.astimezone(ZoneInfo(tz))
+db.init_app(app)
 
 # Initialize DB
 with app.app_context():
@@ -88,7 +49,7 @@ def index():
         if not content:
             return render_template('index.html', error="Content cannot be empty", recent_pastes=recent_pastes, pagination=pagination)
         
-        paste_id = generate_id()
+        paste_id = generate_id(Paste)
         new_paste = Paste(id=paste_id, content=content)
         db.session.add(new_paste)
         db.session.commit()
@@ -110,12 +71,7 @@ def modify_paste(paste_id):
 
 @app.route('/delete/<paste_id>', methods=['POST'])
 def delete_paste(paste_id):
-    pastes = Paste.query.filter_by(id=paste_id).all()
-    if not pastes:
-        abort(404)
-    for paste in pastes:
-        db.session.delete(paste)
-    db.session.commit()
+    remove_paste(Paste, db, paste_id)
     return redirect(url_for('index'))
 
 @app.route('/<paste_id>')
@@ -163,7 +119,7 @@ def api_create_paste():
     if not content:
         return jsonify({'error': 'Content cannot be empty'}), 400
 
-    paste_id = generate_id()
+    paste_id = generate_id(Paste)
     new_paste = Paste(id=paste_id, content=content)
     db.session.add(new_paste)
     db.session.commit()
