@@ -130,19 +130,11 @@ def api_create_paste():
         'raw_url': url_for('view_raw', paste_id=paste_id, _external=True)
     }), 201
 
-@app.route('/api/paste/<paste_id>', methods=['GET', 'DELETE'])
+@app.route('/api/paste/<paste_id>', methods=['GET'])
 def api_get_paste(paste_id):
     if request.method == "GET":
         paste = Paste.query.filter_by(id=paste_id).order_by(Paste.version.desc()).first_or_404()
         return jsonify(paste.to_dict())
-    if request.method == "DELETE":
-        pastes = Paste.query.filter_by(id=paste_id).all()
-        if not pastes:
-            abort(404)
-        for paste in pastes:
-            db.session.delete(paste)
-        db.session.commit()
-        return '', 204
 
 if __name__ == '__main__':
     # Running on 0.0.0.0 to be accessible from outside the container
