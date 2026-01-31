@@ -52,7 +52,18 @@
         {% if not line.strip() %}
         <br>
         {% else %}
-        <div>{{ line }}</div>
+        <div>
+        {% if line is url %}
+            {# Ensure a scheme is present – default to https if missing #}
+            {% set href = line %}
+            {% if not line.startswith('http://') and not line.startswith('https://') %}
+                {% set href = 'https://' + line %}
+            {% endif %}
+            <a href="{{ href|e }}" target="_blank" rel="noopener">{{ line|e }}</a>
+        {% else %}
+            {{ line|e }}
+        {% endif %}
+        </div>
         {% endif %}
     {% endif %}
 {% endfor %}

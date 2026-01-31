@@ -5,8 +5,25 @@ import datetime
 from zoneinfo import ZoneInfo 
 from flask import Flask, request, jsonify, render_template, redirect, url_for, abort
 from flask_sqlalchemy import SQLAlchemy
+import re
+from jinja2 import Environment, FileSystemLoader
+
+def is_url(value: str) -> bool:
+    """
+    Returns True if *value* looks like a URL.
+    """
+    # The same pattern we used in the template, but compiled once here.
+    pattern = re.compile(
+        r'^(https?://)?'          # optional scheme
+        r'([\w.-]+)\.'            # sub‑domain / domain
+        r'[a-z]{2,}'              # TLD (at least two letters)
+        r'(/[\\w./?%&=-]*)?$'     # optional path / query
+    )
+    return bool(pattern.match(value))
 
 app = Flask(__name__)
+app.jinja_env.tests['url'] = is_url
+
 # Database configuration
 base_dir = os.path.dirname(os.path.abspath(__file__))
 data_dir = '/data' if os.path.exists('/data') else base_dir
