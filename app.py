@@ -1,12 +1,9 @@
 import os
-
 from flask import Flask, request, jsonify, render_template, redirect, url_for, abort
 from jinja2 import Environment, FileSystemLoader
 from backend.models import db, Paste
 from backend.api import remove_paste
 from utils.utilities import generate_id, is_url, set_to_timezone
-
-
 
 app = Flask(__name__)
 app.jinja_env.tests['url'] = is_url
