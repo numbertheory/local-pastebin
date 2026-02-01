@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
+
 class Paste(db.Model):
     id = db.Column(db.String(8), primary_key=True)
     version = db.Column(db.Integer, primary_key=True, default=1)
@@ -11,8 +12,8 @@ class Paste(db.Model):
 
     def to_dict(self):
         return {
-            'id': self.id,
-            'version': self.version,
-            'content': [self.content],
-            'created_at': self.created_at.isoformat()
+            "id": self.id,
+            "version": self.version,
+            "content": [self.content],
+            "created_at": self.created_at.isoformat(),
         }
