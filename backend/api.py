@@ -1,4 +1,4 @@
-from flask import redirect, abort, url_for
+from flask import abort
 
 
 def remove_paste(Paste, db, paste_id):

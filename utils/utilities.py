@@ -1,5 +1,3 @@
-import string
-import random
 import re
 import datetime
 from zoneinfo import ZoneInfo
@@ -31,6 +29,9 @@ def is_url(value: str) -> bool:
     return bool(pattern.match(value))
 
 
-def set_to_timezone(naive_ts, tz=os.getenv("PASTEBIN_TIMEZONE", "America/Los_Angeles")):
+def set_to_timezone(
+        naive_ts,
+        tz=os.getenv("PASTEBIN_TIMEZONE", "America/Los_Angeles")
+        ):
     utc_dt = naive_ts.replace(tzinfo=datetime.timezone.utc)
     return utc_dt.astimezone(ZoneInfo(tz))

@@ -1,6 +1,7 @@
 import os
-from flask import Flask, request, jsonify, render_template, redirect, url_for, abort
-from jinja2 import Environment, FileSystemLoader
+from flask import Flask, request
+from flask import jsonify, render_template
+from flask import redirect, url_for, abort
 from backend.models import db, Paste
 from backend.api import remove_paste
 from utils.utilities import generate_id, is_url, set_to_timezone
@@ -30,7 +31,9 @@ def index():
 
     # Subquery to find the latest version for each paste
     subquery = (
-        db.session.query(Paste.id, db.func.max(Paste.version).label("max_version"))
+        db.session.query(
+            Paste.id, db.func.max(Paste.version).label("max_version")
+        )
         .group_by(Paste.id)
         .subquery()
     )
@@ -39,10 +42,14 @@ def index():
     pagination = (
         Paste.query.join(
             subquery,
-            (Paste.id == subquery.c.id) & (Paste.version == subquery.c.max_version),
+            (Paste.id == subquery.c.id) &
+            (Paste.version == subquery.c.max_version),
         )
         .order_by(Paste.created_at.desc())
-        .paginate(page=page, per_page=app.config["PASTES_PER_PAGE"], error_out=False)
+        .paginate(
+            page=page,
+            per_page=app.config["PASTES_PER_PAGE"],
+            error_out=False)
     )
 
     recent_pastes = [
@@ -91,7 +98,9 @@ def index():
 def modify_paste(paste_id):
     # Get the latest version to increment
     latest_paste = (
-        Paste.query.filter_by(id=paste_id).order_by(Paste.version.desc()).first_or_404()
+        Paste.query.filter_by(id=paste_id).order_by(
+            Paste.version.desc()
+        ).first_or_404()
     )
     content = request.form.get("content")
     if content:
@@ -111,7 +120,9 @@ def delete_paste(paste_id):
 @app.route("/<paste_id>")
 def view_paste(paste_id):
     version = request.args.get("version", type=int)
-    pastes = Paste.query.filter_by(id=paste_id).order_by(Paste.version.desc()).all()
+    pastes = Paste.query.filter_by(
+        id=paste_id
+        ).order_by(Paste.version.desc()).all()
     if not pastes:
         abort(404)
 
@@ -135,7 +146,9 @@ def view_paste(paste_id):
 @app.route("/raw/<paste_id>")
 def view_raw(paste_id):
     paste = (
-        Paste.query.filter_by(id=paste_id).order_by(Paste.version.desc()).first_or_404()
+        Paste.query.filter_by(id=paste_id).order_by(
+            Paste.version.desc()
+        ).first_or_404()
     )
     return paste.content, 200, {"Content-Type": "text/plain; charset=utf-8"}
 
@@ -144,6 +157,9 @@ def view_raw(paste_id):
 @app.route("/api/paste", methods=["POST"])
 def api_create_paste():
     data = request.get_json(silent=True)
+    error_text_400 = "Content is required. " \
+        "Send JSON {\"content\": \"...\"}," \
+        " form data, or raw text."
 
     # Handle form data or JSON
     if data and "content" in data:
@@ -158,7 +174,7 @@ def api_create_paste():
             return (
                 jsonify(
                     {
-                        "error": 'Content is required. Send JSON {"content": "..."}, form data, or raw text.'
+                        "error": error_text_400
                     }
                 ),
                 400,
@@ -176,8 +192,10 @@ def api_create_paste():
         jsonify(
             {
                 "id": paste_id,
-                "url": url_for("view_paste", paste_id=paste_id, _external=True),
-                "raw_url": url_for("view_raw", paste_id=paste_id, _external=True),
+                "url": url_for(
+                    "view_paste", paste_id=paste_id, _external=True),
+                "raw_url": url_for(
+                    "view_raw", paste_id=paste_id, _external=True),
             }
         ),
         201,
