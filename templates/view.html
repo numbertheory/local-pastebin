@@ -36,7 +36,7 @@
         </div>
     </div>
 {% set ns = namespace(in_code=False) %}
-{% for line in paste.content[0].split('\n') %}
+{% for line in paste.content[0].splitlines() %}
     {% if line.startswith('```') %}
         {% if ns.in_code %}
             </div>
@@ -54,7 +54,7 @@
         {% else %}
         <div>
         {% if line is url %}
-            {# Ensure a scheme is present – default to https if missing #}
+            {# Ensure a scheme is present / default to https if missing #}
             {% set href = line %}
             {% if not line.startswith('http://') and not line.startswith('https://') %}
                 {% set href = 'https://' + line %}
